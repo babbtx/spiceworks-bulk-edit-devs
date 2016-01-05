@@ -1,0 +1,11 @@
+<table id="editor_table" class="table table-striped table-bordered">
+  <thead></thead>
+</table>
+
+<% content_for(:scripts) do %>
+  <script type="text/javascript">
+    $(document).ready(function(){
+      (new DeviceEditor()).load("#editor_table");
+    });
+  </script>
+<% end %>

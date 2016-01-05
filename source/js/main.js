@@ -7,4 +7,8 @@
  *= require datatables.net-buttons/js/dataTables.buttons
  *= require datatables.net-buttons-bs/js/buttons.bootstrap
  *= require datatables.net-select/js/dataTables.select
+ *
+ *= require vendor/dataTables.editor
+ *= require vendor/editor.bootstrap
+ *= require device-editor
  */
