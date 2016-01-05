@@ -1,6 +1,9 @@
 /*
  *= require normalize-css
  *= require bootstrap/dist/css/bootstrap
+ *= require datatables.net-bs/css/dataTables.bootstrap
+ *= require datatables.net-select-bs/css/select.bootstrap
+ *= require datatables.net-buttons-bs/css/buttons.bootstrap
  *= require_tree .
  */
 
