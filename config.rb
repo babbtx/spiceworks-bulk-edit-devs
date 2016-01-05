@@ -5,6 +5,13 @@
 bower_components = Pathname.new(File.join(root, 'bower_components'))
 sprockets.append_path(bower_components)
 
+Dir[File.join(bower_components, "**/font{,s}/**/*.{ttf,woff,woff2}")].each do |path|
+  relative_path = Pathname.new(path).relative_path_from(bower_components)
+  logical_path = relative_path.to_s.sub(%r{^.*/(fonts?/)}, '\1')
+  STDOUT.puts "found font: #{relative_path} -> #{logical_path}"
+  sprockets.import_asset(relative_path) { logical_path }
+end
+
 ###
 # Compass
 ###
@@ -59,10 +66,9 @@ config[:file_watcher_ignore] << /^\.idea(\/|$)/
 # end
 
 set :css_dir, 'css'
-
 set :js_dir, 'js'
-
 set :images_dir, 'img'
+set :fonts_dir, 'fonts'
 
 # Build-specific configuration
 configure :build do
