@@ -3,6 +3,8 @@ this.DeviceEditor = (function(){
 
   var DeviceEditor = function DeviceEditor() {
 
+    this.service = (new SW.Card()).services("inventory");
+
     // modified from https://datatables.net/reference/option/dom
     var editorLayout =
       "<'row'<'col-sm-12'fBi>>" +
@@ -10,11 +12,10 @@ this.DeviceEditor = (function(){
       "<'row'<'col-sm-12'p>>" ;
 
     this.defaultEditorOptions = {idSrc: "id"};
-    this.defaultTableOptions = {select: true, dom: editorLayout};
-
+    this.defaultTableOptions = {pageLength: 15, select: true, dom: editorLayout};
     this.editorOptions = undefined;
-    this.editor = undefined;
     this.tableOptions = undefined;
+    this.editor = undefined;
 
     this.adminDefinedColumns = undefined;
     this.standardColumns = [
@@ -36,24 +37,38 @@ this.DeviceEditor = (function(){
 
     this.loadDeviceMeta = function() {
       var that = this;
-      return (new SW.Card()).services("inventory")
+      return this.service
         .request("devices")
-        .then(function(data){
-          that.initialResponse = data;
-          that.adminDefinedColumns = data.meta.admin_defined_attrs || [];
+        .then(function(response){
+          that.initialResponse = response;
+          that.adminDefinedColumns = response.meta.admin_defined_attrs || [];
         });
     };
 
-    this.editorAjaxAdapter = function(method, url, d, successCallback, errorCallback) {
-
+    this.editorAjaxAdapter = function(method, url, data, successCallback, errorCallback) {
+      debugger;
     };
 
     this.configureEditor = function(selector, editorOptions) {
-      var editorFields = this.standardColumns.concat(this.adminDefinedColumns);
+      var adminFields = _.collect(this.adminDefinedColumns, function(def){
+        var type;
+        switch(def.type) {
+          case "enum":
+            type = "select";
+            break;
+          case "date":
+            type = "date";
+            break;
+          default:
+            type = "text";
+        }
+        return _.extend(_.pick(def, "name", "label"), {type: type});
+      }) ;
+      var editorFields = this.standardColumns.concat(adminFields);
       this.editorOptions = _.extend(this.defaultEditorOptions,
         {table: selector, fields: editorFields},
         editorOptions,
-        {ajax: this.editorAjaxAdapter});
+        {ajax: this.editorAjaxAdapter.bind(this)});
       return this.editorOptions;
     };
 
@@ -80,6 +95,28 @@ this.DeviceEditor = (function(){
       return data.admin_defined_attrs[def.name] || "";
     };
 
+    this.tableAjaxAdapter = function(data, callback, settings) {
+      var that = this;
+      var page = 1 + data.start / this.tableOptions.pageLength;
+      this.service
+        .request("devices", {page: page, per_page: data.length})
+        .then(
+          function(response){
+            callback({draw: data.draw,
+              data: response.devices,
+              recordsTotal: that.initialResponse.meta.total_entries,
+              recordsFiltered: response.meta.total_entries
+            });
+          },
+          function(response){
+            var error = _.isArray(response.errors) ? response.errors[0] : response;
+            callback({draw: data.draw,
+              error: error.title || error.details || error.message || JSON.stringify(error)
+            });
+          }
+        );
+    };
+
     this.configureTable = function(tableOptions) {
       var that = this;
       var columnConfigs = [];
@@ -90,8 +127,13 @@ this.DeviceEditor = (function(){
         columnConfigs.push({data: null, render: that.customAttributeRenderer.bind(that, def)});
       });
       this.tableOptions = _.extend(this.defaultTableOptions,
-        {columns: columnConfigs, data: this.initialResponse.devices, buttons: [{extend: "edit", editor: this.editor}]},
-        tableOptions);
+        tableOptions,
+        {columns: columnConfigs,
+          serverSide: true, ajax: this.tableAjaxAdapter.bind(this),
+          data: this.initialResponse.devices,
+          buttons: [{extend: "edit", editor: this.editor}]
+        }
+      );
       return this.tableOptions;
     };
 
