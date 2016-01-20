@@ -76,14 +76,14 @@ this.DeviceEditor = (function(){
       this.editor = new $.fn.dataTable.Editor(editorOptions);
     };
 
-    this.standardAttributeRenderer = function(def, data, requestType, row, meta) {
-      var value = data[def.name] || "";
-      if (def.name === "site") {
+    this.standardAttributeTableRenderer = function(columnConfig, data, requestType, row, meta) {
+      var value = data[columnConfig.name] || "";
+      if (columnConfig.name === "site") {
         if (data["site"] && data["site"].name) {
           value = data["site"].name;
         }
       }
-      else if (def.name === "owner") {
+      else if (columnConfig.name === "owner") {
         if (data["owner"] && data["owner"].id) {
           value = data["owner"].first_name + " " + data["owner"].last_name;
         }
@@ -91,9 +91,21 @@ this.DeviceEditor = (function(){
       return value;
     };
 
-    this.customAttributeRenderer = function(def, data, requestType, row, meta) {
-      return data.admin_defined_attrs[def.name] || "";
+    this.customAttributeTableRenderer = function(columnConfig, data, requestType, row, meta) {
+      return data.admin_defined_attrs[columnConfig.name] || "";
     };
+
+    this.getTableColumns = function() {
+      var that = this;
+      var columns = [];
+      _.each(this.standardColumns, function(columnConfig) {
+        columns.push({data: null, render: that.standardAttributeTableRenderer.bind(that, columnConfig)});
+      });
+      _.each(this.adminDefinedColumns, function(columnConfig) {
+        columns.push({data: null, render: that.customAttributeTableRenderer.bind(that, columnConfig)});
+      });
+      return columns;
+    }
 
     this.tableAjaxAdapter = function(data, callback, settings) {
       var that = this;
@@ -118,17 +130,9 @@ this.DeviceEditor = (function(){
     };
 
     this.configureTable = function(tableOptions) {
-      var that = this;
-      var columnConfigs = [];
-      _.each(this.standardColumns, function(def) {
-        columnConfigs.push({data: null, render: that.standardAttributeRenderer.bind(that, def)});
-      });
-      _.each(this.adminDefinedColumns, function(def) {
-        columnConfigs.push({data: null, render: that.customAttributeRenderer.bind(that, def)});
-      });
       this.tableOptions = _.extend(this.defaultTableOptions,
         tableOptions,
-        {columns: columnConfigs,
+        { columns: this.getTableColumns(),
           serverSide: true, ajax: this.tableAjaxAdapter.bind(this),
           data: this.initialResponse.devices,
           buttons: [{extend: "edit", editor: this.editor}]
