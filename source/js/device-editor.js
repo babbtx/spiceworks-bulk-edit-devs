@@ -49,24 +49,48 @@ this.DeviceEditor = (function(){
       debugger;
     };
 
+    this.getEditorField = function(columnConfig, accessor) {
+      var type;
+      switch(columnConfig.type) {
+        case "enum":
+          type = "select";
+          break;
+        case "date":
+          type = "date";
+          break;
+        default:
+          type = "text";
+      }
+      return {name: columnConfig.name, label: columnConfig.label, type: type, data: accessor};
+    };
+
+    this.standardAttributeEditorAccessor = function(columnConfig, data, type, value) {
+      if (type !== "set") {
+        return this.standardAttributeTableRenderer(columnConfig, data);
+      }
+    };
+
+    this.customAttributeEditorAccessor = function(columnConfig, data, type, value) {
+      if (type !== "set") {
+        return this.customAttributeTableRenderer(columnConfig, data);
+      }
+    };
+
+    this.getEditorFields = function() {
+      var that = this;
+      var fields = [];
+      _.each(this.standardColumns, function(columnConfig) {
+        fields.push(that.getEditorField(columnConfig, that.standardAttributeEditorAccessor.bind(that, columnConfig)));
+      });
+      _.each(this.adminDefinedColumns, function(columnConfig) {
+        fields.push(that.getEditorField(columnConfig, that.customAttributeEditorAccessor.bind(that, columnConfig)));
+      });
+      return fields;
+    };
+
     this.configureEditor = function(selector, editorOptions) {
-      var adminFields = _.collect(this.adminDefinedColumns, function(def){
-        var type;
-        switch(def.type) {
-          case "enum":
-            type = "select";
-            break;
-          case "date":
-            type = "date";
-            break;
-          default:
-            type = "text";
-        }
-        return _.extend(_.pick(def, "name", "label"), {type: type});
-      }) ;
-      var editorFields = this.standardColumns.concat(adminFields);
       this.editorOptions = _.extend(this.defaultEditorOptions,
-        {table: selector, fields: editorFields},
+        {table: selector, fields: this.getEditorFields()},
         editorOptions,
         {ajax: this.editorAjaxAdapter.bind(this)});
       return this.editorOptions;
