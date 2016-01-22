@@ -46,6 +46,27 @@ this.DeviceEditor = (function(){
 
     this.editorAjaxAdapter = function(method, url, data, successCallback, errorCallback) {
       debugger;
+    this.errorResponseToString = function errorResponseToString(error) {
+      if (_.isArray(error)) {
+        return _.collect(error, errorResponseToString).join(", ");
+      }
+      if (_.isObject(error) && error.errors) {
+        return errorResponseToString(error.errors);
+      }
+      var result = "";
+      if (error.title) {
+        result = result.concat(error.title, ": ");
+      }
+      if (error.details) {
+        result = result.concat(error.details);
+      }
+      else if (typeof(error) === "string") {
+        result = result.concat(error);
+      }
+      else {
+        result = result.concat(JSON.stringify(error));
+      }
+      return result;
     };
 
     this.getEditorField = function(columnConfig, accessor) {
@@ -144,10 +165,9 @@ this.DeviceEditor = (function(){
             });
           },
           function(response){
-            var error = _.isArray(response.errors) ? response.errors[0] : response;
-            callback({draw: data.draw,
-              error: error.title || error.details || error.message || JSON.stringify(error)
-            });
+            var error = that.errorResponseToString(response);
+            console.warn("API devices fetch error: ", error);
+            callback({draw: data.draw, error: error});
           }
         );
     };
