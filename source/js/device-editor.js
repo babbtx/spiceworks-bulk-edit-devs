@@ -28,9 +28,8 @@ this.DeviceEditor = (function(){
       {name: "serial_number", label: "Serial Number", type: "text"},
       {name: "asset_tag", label: "Asset Tag", type: "text"},
       {name: "device_type", label: "Device Type", type: "text"},
-      {name: "site", label: "Site Name", type: "text"},
-      {name: "primary_owner_name", label: "Owner Name", type: "text"},
-      {name: "owner", label: "Owner User Id", type: "text"},
+      {name: "site", label: "Site Name", type: "text"}, // must be translated to/from site.name
+      {name: "owner", label: "Owner", type: "text"}, // must be translated to/from user objects
       {name: "purchase_date", label: "Purchase Date", type: "date"},
       {name: "purchase_price", label: "Purchase Price", type: "text"},
     ];
