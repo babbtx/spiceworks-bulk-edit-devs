@@ -11,7 +11,7 @@ this.DeviceEditor = (function(){
       "<'row'<'col-sm-12'rt>>" +
       "<'row'<'col-sm-12'p>>" ;
 
-    this.defaultEditorOptions = {idSrc: "id"};
+    this.defaultEditorOptions = {idSrc: "id", formOptions: {main: {submit: "changed", drawType: "full-hold", title: "Edit Device(s)"}}};
     this.defaultTableOptions = {pageLength: 15, select: true, dom: editorLayout};
     this.editorOptions = undefined;
     this.tableOptions = undefined;
@@ -44,8 +44,6 @@ this.DeviceEditor = (function(){
         });
     };
 
-    this.editorAjaxAdapter = function(method, url, data, successCallback, errorCallback) {
-      debugger;
     this.errorResponseToString = function errorResponseToString(error) {
       if (_.isArray(error)) {
         return _.collect(error, errorResponseToString).join(", ");
@@ -67,6 +65,40 @@ this.DeviceEditor = (function(){
         result = result.concat(JSON.stringify(error));
       }
       return result;
+    };
+
+    this.editorAjaxAdapter = function(method, url, data, callback, xhrErrorCallback) {
+      if (data.action !== "edit") {
+        xhrErrorCallback(null, "error", "invalid");
+        return;
+      }
+      var that = this;
+      var requests = _.collect(data.data, function(updates, id) {
+        var d = $.Deferred();
+        console.log("API updates for device " + id + ": " + JSON.stringify(updates));
+        that.service
+          .request("device:update", parseInt(id, 10), updates)
+          .then(
+            function(response){
+              d.resolve(response);
+            },
+            function(response){
+              console.warn("API device " + id + " update error: ", that.errorResponseToString(response));
+              d.reject(response);
+            }
+          );
+        return d.promise();
+      });
+      $.when.apply($, requests).then(
+        function(args) {
+          var devices = _.toArray(arguments);
+          callback({data: devices});
+        },
+        function(args) {
+          var errors = _.collect(_.toArray(arguments), that.errorResponseToString).join(", ");
+          callback({error: errors});
+        }
+      );
     };
 
     this.getEditorField = function(columnConfig, accessor) {
