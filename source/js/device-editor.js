@@ -29,10 +29,34 @@ this.DeviceEditor = (function(){
       {name: "asset_tag", label: "Asset Tag", type: "text"},
       {name: "device_type", label: "Device Type", type: "text"},
       {name: "site", label: "Site Name", type: "text"}, // must be translated to/from site.name
-      {name: "owner", label: "Owner", type: "text"}, // must be translated to/from user objects
+      {name: "owner", label: "Owner", type: "enum"}, // must be translated to/from user objects
       {name: "purchase_date", label: "Purchase Date", type: "date"},
       {name: "purchase_price", label: "Purchase Price", type: "text"},
     ];
+
+    this.loadAllUsers = function(prevMeta) {
+      // prevMeta is undefined on the first call
+      prevMeta = _.extend({current_page: 0, page_count: 1}, prevMeta);
+      var page = prevMeta.current_page + 1;
+      if (page > prevMeta.page_count) {
+        return;
+      }
+      console.log("API load users page=" + page);
+      var that = this;
+      return (new SW.Card()).services("people")
+        .request("people", {page: page, per_page: 5})
+        .then(function(response){
+          // create "hash" of {"First Last": id}
+          var users = _.inject(response.people, function(hash, person) {
+            hash[person.first_name.concat(" ", person.last_name)] = person.id;
+            return hash;
+          }, {});
+          // merge with existing
+          that.users = _.extend({}, that.users, users);
+          return response.meta;
+        })
+        .then(this.loadAllUsers.bind(this));
+    };
 
     this.loadDeviceMeta = function() {
       var that = this;
@@ -113,7 +137,11 @@ this.DeviceEditor = (function(){
         default:
           type = "text";
       }
-      return {name: columnConfig.name, label: columnConfig.label, type: type, data: accessor};
+      var options = null;
+      if (columnConfig.name === "owner") {
+        options = this.users;
+      }
+      return {name: columnConfig.name, label: columnConfig.label, type: type, data: accessor, options: options};
     };
 
     this.standardAttributeEditorAccessor = function(columnConfig, data, type, value) {
@@ -162,6 +190,9 @@ this.DeviceEditor = (function(){
       else if (columnConfig.name === "owner") {
         if (data["owner"] && data["owner"].id) {
           value = data["owner"].first_name + " " + data["owner"].last_name;
+        }
+        else if (data["primary_owner_name"]) {
+          value = data["primary_owner_name"];
         }
       }
       return value;
@@ -229,7 +260,8 @@ this.DeviceEditor = (function(){
 
     this.load = function(selector, editorOptions, tableOptions) {
       var that = this;
-      return this.loadDeviceMeta.call(this)
+      return this.loadAllUsers.call(this)
+        .then(this.loadDeviceMeta.bind(this))
         .then(this.configureEditor.bind(this, selector, editorOptions))
         .then(this.createEditor.bind(this))
         .then(this.configureTable.bind(this, tableOptions))
