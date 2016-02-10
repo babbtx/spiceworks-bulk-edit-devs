@@ -248,13 +248,6 @@ this.DeviceEditor = (function(){
     };
 
     this.createTable = function(selector, tableOptions) {
-      var $table = $(selector);
-      var headings = _.inject(_.pluck(this.editorOptions.fields, "label"), function(retval, label){
-        retval = retval || [];
-        retval.push("<td>" + label + "</td>");
-        return retval;
-      }, []);
-      $table.find("thead").empty().html("<tr>" + headings + "</tr>");
       $(selector).DataTable(tableOptions);
     };
 
