@@ -19,21 +19,23 @@ this.DeviceEditor = (function(){
 
     this.adminDefinedColumns = undefined;
     this.standardColumns = [
-      {name: "name", label: "Name", type: "text"},
-      {name: "description", label: "Description", type: "text"},
-      {name: "manufacturer", label: "Manufacturer", type: "text"},
-      {name: "model", label: "Model", type: "text"},
-      {name: "mac_address", label: "MAC Address", type: "text"},
-      {name: "ip_address", label: "IP Address", type: "text"},
-      {name: "serial_number", label: "Serial Number", type: "text"},
-      {name: "asset_tag", label: "Asset Tag", type: "text"},
-      {name: "device_type", label: "Device Type", type: "text"},
-      {name: "site", label: "Site Name", type: "text"}, // must be translated to/from site.name
-      {name: "owner", label: "Owner", type: "enum"}, // must be translated to/from user objects
-      {name: "purchase_date", label: "Purchase Date", type: "date"},
-      {name: "purchase_price", label: "Purchase Price", type: "text"},
+      {name: "name", label: "Name", type: "text", orderable: true, searchable: true},
+      {name: "ip_address", label: "IP Address", type: "text", orderable: true, searchable: false},
+      {name: "serial_number", label: "Serial Number", type: "text", orderable: false, searchable: false},
+      {name: "mac_address", label: "MAC Address", type: "text", orderable: false, searchable: false},
+      {name: "asset_tag", label: "Asset Tag", type: "text", orderable: false, searchable: false},
+      {name: "device_type", label: "Device Type", type: "text", orderable: true, searchable: false},
+      {name: "description", label: "Description", type: "text", orderable: false, searchable: false},
+      {name: "manufacturer", label: "Manufacturer", type: "text", orderable: true, searchable: true},
+      {name: "model", label: "Model", type: "text", orderable: true, searchable: true},
+      {name: "location", label: "Location", type: "text", orderable: false, searchable: false},
+      {name: "site", label: "Site", type: "text", orderable: false, searchable: false}, // must be translated to/from site.name
+      {name: "owner", label: "Owner", type: "enum", orderable: false, searchable: false}, // must be translated to/from user objects
+      {name: "purchase_date", label: "Purchase Date", type: "date", orderable: false, searchable: false},
+      {name: "purchase_price", label: "Purchase Price", type: "text", orderable: false, searchable: false},
     ];
 
+    this.users = undefined;
     this.loadAllUsers = function(prevMeta) {
       // prevMeta is undefined on the first call
       prevMeta = _.extend({current_page: 0, page_count: 1}, prevMeta);
@@ -58,6 +60,7 @@ this.DeviceEditor = (function(){
         .then(this.loadAllUsers.bind(this));
     };
 
+    this.initialResponse = undefined;
     this.loadDeviceMeta = function() {
       var that = this;
       return this.service
@@ -141,7 +144,9 @@ this.DeviceEditor = (function(){
       if (columnConfig.name === "owner") {
         options = this.users;
       }
-      return {name: columnConfig.name, label: columnConfig.label, type: type, data: accessor, options: options};
+      var field = _.pick(columnConfig, "name", "label");
+      _.extend(field, {type: type, data: accessor, options: options});
+      return field;
     };
 
     this.standardAttributeEditorAccessor = function(columnConfig, data, type, value) {
@@ -202,14 +207,29 @@ this.DeviceEditor = (function(){
       return data.admin_defined_attrs[columnConfig.name] || "";
     };
 
+    this.getTableColumn = function(columnConfig, renderer) {
+      var type;
+      switch(columnConfig.type) {
+        case "date":
+          type = "date";
+          break;
+        default:
+          type = "string";
+      }
+      var column = _.pick(columnConfig, "visible", "orderable", "searchable");
+      _.extend(column, {title: columnConfig.label, type: type, data: null, render: renderer});
+      _.defaults(column, {orderable: false, searchable: false});
+      return column;
+    };
+
     this.getTableColumns = function() {
       var that = this;
       var columns = [];
       _.each(this.standardColumns, function(columnConfig) {
-        columns.push({data: null, render: that.standardAttributeTableRenderer.bind(that, columnConfig)});
+        columns.push(that.getTableColumn(columnConfig, that.standardAttributeTableRenderer.bind(that, columnConfig)));
       });
       _.each(this.adminDefinedColumns, function(columnConfig) {
-        columns.push({data: null, render: that.customAttributeTableRenderer.bind(that, columnConfig)});
+        columns.push(that.getTableColumn(columnConfig, that.customAttributeTableRenderer.bind(that, columnConfig)));
       });
       return columns;
     }
