@@ -64,7 +64,7 @@ this.DeviceEditor = (function(){
     this.loadDeviceMeta = function() {
       var that = this;
       return this.service
-        .request("devices")
+        .request("devices", {sort: [{name: "asc"}]})
         .then(function(response){
           that.initialResponse = response;
           that.adminDefinedColumns = response.meta.admin_defined_attrs || [];
@@ -238,7 +238,7 @@ this.DeviceEditor = (function(){
       var that = this;
       var page = 1 + data.start / this.tableOptions.pageLength;
       this.service
-        .request("devices", {page: page, per_page: data.length})
+        .request("devices", {sort: [{name: "asc"}], page: page, per_page: data.length})
         .then(
           function(response){
             callback({draw: data.draw,
