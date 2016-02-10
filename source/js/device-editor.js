@@ -12,7 +12,7 @@ this.DeviceEditor = (function(){
       "<'row'<'col-sm-12'p>>" ;
 
     this.defaultEditorOptions = {idSrc: "id", formOptions: {main: {submit: "changed", drawType: "full-hold", title: "Edit Device(s)"}}};
-    this.defaultTableOptions = {pageLength: 15, select: true, dom: editorLayout};
+    this.defaultTableOptions = {pageLength: 15, search: {caseInsensitive: true, regex: false}, searchDelay: 500, select: true, dom: editorLayout};
     this.editorOptions = undefined;
     this.tableOptions = undefined;
     this.editor = undefined;
@@ -237,15 +237,20 @@ this.DeviceEditor = (function(){
     this.tableAjaxAdapter = function(data, callback, settings) {
       var that = this;
       var page = 1 + data.start / this.tableOptions.pageLength;
-      var sort = {};
+      var requestOptions = {sort: [{name: "asc"}], page: page, per_page: data.length};
       if (data.order && data.order[0]) {
-        sort[settings.aoColumns[data.order[0].column].sName] = data.order[0].dir;
+        var sortName = this.tableOptions.columns[data.order[0].column].name;
+        var sortDir = data.order[0].dir;
+        var sortSpec = {};
+        sortSpec[sortName] = sortDir;
+        requestOptions.sort[0] = sortSpec;
       }
-      else {
-        sort["name"] = "asc";
+      if (data.search && data.search.value) {
+        requestOptions.search = {query: {terms: data.search.value}, fields: {names: ["name", "manufacturer", "model"]}};
       }
+      console.log("API load devices:" + JSON.stringify(requestOptions));
       this.service
-        .request("devices", {sort: [sort], page: page, per_page: data.length})
+        .request("devices", requestOptions)
         .then(
           function(response){
             callback({draw: data.draw,
