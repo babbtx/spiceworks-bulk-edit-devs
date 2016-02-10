@@ -216,7 +216,7 @@ this.DeviceEditor = (function(){
         default:
           type = "string";
       }
-      var column = _.pick(columnConfig, "visible", "orderable", "searchable");
+      var column = _.pick(columnConfig, "name", "visible", "orderable", "searchable");
       _.extend(column, {title: columnConfig.label, type: type, data: null, render: renderer});
       _.defaults(column, {orderable: false, searchable: false});
       return column;
@@ -237,8 +237,15 @@ this.DeviceEditor = (function(){
     this.tableAjaxAdapter = function(data, callback, settings) {
       var that = this;
       var page = 1 + data.start / this.tableOptions.pageLength;
+      var sort = {};
+      if (data.order && data.order[0]) {
+        sort[settings.aoColumns[data.order[0].column].sName] = data.order[0].dir;
+      }
+      else {
+        sort["name"] = "asc";
+      }
       this.service
-        .request("devices", {sort: [{name: "asc"}], page: page, per_page: data.length})
+        .request("devices", {sort: [sort], page: page, per_page: data.length})
         .then(
           function(response){
             callback({draw: data.draw,
