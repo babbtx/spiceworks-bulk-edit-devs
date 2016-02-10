@@ -241,6 +241,7 @@ this.DeviceEditor = (function(){
         { columns: this.getTableColumns(),
           serverSide: true, ajax: this.tableAjaxAdapter.bind(this),
           data: this.initialResponse.devices,
+          deferLoading: [this.initialResponse.meta.total_entries, this.initialResponse.meta.total_entries],
           buttons: [{extend: "edit", editor: this.editor}]
         }
       );
