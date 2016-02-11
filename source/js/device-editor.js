@@ -64,7 +64,7 @@ this.DeviceEditor = (function(){
     this.loadDeviceMeta = function() {
       var that = this;
       return this.service
-        .request("devices", {sort: [{name: "asc"}]})
+        .request("devices", {sort: [{name: "asc"}], per_page: this.defaultTableOptions.pageLength})
         .then(function(response){
           that.initialResponse = response;
           that.adminDefinedColumns = response.meta.admin_defined_attrs || [];
@@ -174,7 +174,8 @@ this.DeviceEditor = (function(){
     };
 
     this.configureEditor = function(selector, editorOptions) {
-      this.editorOptions = _.extend(this.defaultEditorOptions,
+      this.editorOptions = _.extend({},
+        this.defaultEditorOptions,
         {table: selector, fields: this.getEditorFields()},
         editorOptions,
         {ajax: this.editorAjaxAdapter.bind(this)});
@@ -248,7 +249,7 @@ this.DeviceEditor = (function(){
       if (data.search && data.search.value) {
         requestOptions.search = {query: {terms: data.search.value}, fields: {names: ["name", "manufacturer", "model"]}};
       }
-      console.log("API load devices:" + JSON.stringify(requestOptions));
+      console.log("API load devices: " + JSON.stringify(requestOptions));
       this.service
         .request("devices", requestOptions)
         .then(
@@ -268,7 +269,8 @@ this.DeviceEditor = (function(){
     };
 
     this.configureTable = function(tableOptions) {
-      this.tableOptions = _.extend(this.defaultTableOptions,
+      this.tableOptions = _.extend({},
+        this.defaultTableOptions,
         tableOptions,
         { columns: this.getTableColumns(),
           serverSide: true, ajax: this.tableAjaxAdapter.bind(this),
