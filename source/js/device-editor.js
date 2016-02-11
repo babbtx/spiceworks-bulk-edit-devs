@@ -19,20 +19,20 @@ this.DeviceEditor = (function(){
 
     this.adminDefinedColumns = undefined;
     this.standardColumns = [
-      {name: "name", label: "Name", type: "text", orderable: true, searchable: true},
-      {name: "ip_address", label: "IP Address", type: "text", orderable: true, searchable: false},
-      {name: "serial_number", label: "Serial Number", type: "text", orderable: false, searchable: false},
-      {name: "mac_address", label: "MAC Address", type: "text", orderable: false, searchable: false},
-      {name: "asset_tag", label: "Asset Tag", type: "text", orderable: false, searchable: false},
-      {name: "device_type", label: "Device Type", type: "text", orderable: true, searchable: false},
-      {name: "description", label: "Description", type: "text", orderable: false, searchable: false},
-      {name: "manufacturer", label: "Manufacturer", type: "text", orderable: true, searchable: true},
-      {name: "model", label: "Model", type: "text", orderable: true, searchable: true},
-      {name: "location", label: "Location", type: "text", orderable: false, searchable: false},
-      {name: "site", label: "Site", type: "text", orderable: false, searchable: false}, // must be translated to/from site.name
-      {name: "owner", label: "Owner", type: "enum", orderable: false, searchable: false}, // must be translated to/from user objects
-      {name: "purchase_date", label: "Purchase Date", type: "date", orderable: false, searchable: false},
-      {name: "purchase_price", label: "Purchase Price", type: "text", orderable: false, searchable: false},
+      {name: "name", label: "Name", type: "text", orderable: true, searchable: true, visible: true},
+      {name: "ip_address", label: "IP Address", type: "text", orderable: true, searchable: false, visible: true},
+      {name: "serial_number", label: "Serial Number", type: "text", orderable: false, searchable: false, visible: false},
+      {name: "mac_address", label: "MAC Address", type: "text", orderable: false, searchable: false, visible: false},
+      {name: "asset_tag", label: "Asset Tag", type: "text", orderable: false, searchable: false, visible: false},
+      {name: "device_type", label: "Device Type", type: "text", orderable: true, searchable: false, visible: false},
+      {name: "description", label: "Description", type: "text", orderable: false, searchable: false, visible: false},
+      {name: "manufacturer", label: "Manufacturer", type: "text", orderable: true, searchable: true, visible: true},
+      {name: "model", label: "Model", type: "text", orderable: true, searchable: true, visible: true},
+      {name: "location", label: "Location", type: "text", orderable: false, searchable: false, visible: false},
+      {name: "site", label: "Site", type: "text", orderable: false, searchable: false, visible: false}, // must be translated to/from site.name
+      {name: "owner", label: "Owner", type: "enum", orderable: false, searchable: false, visible: true}, // must be translated to/from user objects
+      {name: "purchase_date", label: "Purchase Date", type: "date", orderable: false, searchable: false, visible: false},
+      {name: "purchase_price", label: "Purchase Price", type: "text", orderable: false, searchable: false, visible: false},
     ];
 
     this.users = undefined;
@@ -218,7 +218,7 @@ this.DeviceEditor = (function(){
       }
       var column = _.pick(columnConfig, "name", "visible", "orderable", "searchable");
       _.extend(column, {title: columnConfig.label, type: type, data: null, render: renderer});
-      _.defaults(column, {orderable: false, searchable: false});
+      _.defaults(column, {orderable: false, searchable: false, visible: false});
       return column;
     };
 
