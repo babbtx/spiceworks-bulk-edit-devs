@@ -7,9 +7,9 @@ this.DeviceEditor = (function(){
 
     // modified from https://datatables.net/reference/option/dom
     var editorLayout =
-      "<'row'<'col-sm-12'fBi>>" +
+      "<'row'<'editor-search col-sm-6'fi><'editor-actions col-sm-6'B>>" +
       "<'row'<'col-sm-12'rt>>" +
-      "<'row'<'col-sm-12'p>>" ;
+      "<'row'<'editor-paging col-sm-12'p>>" ;
 
     this.defaultEditorOptions = {idSrc: "id", formOptions: {main: {submit: "changed", drawType: "full-hold", title: "Edit Device(s)"}}};
     this.defaultTableOptions = {pageLength: 15, search: {caseInsensitive: true, regex: false}, searchDelay: 500, select: true, dom: editorLayout};
