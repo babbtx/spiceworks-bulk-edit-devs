@@ -272,8 +272,21 @@ this.DeviceEditor = (function(){
       this.tableOptions = _.extend({},
         this.defaultTableOptions,
         tableOptions,
-        { columns: this.getTableColumns(),
-          serverSide: true, ajax: this.tableAjaxAdapter.bind(this),
+        { columnDefs: [ { // define first column as select
+            targets: 0,
+            orderable: false,
+            className: 'select-checkbox',
+            data: null,
+            defaultContent: "",
+          } ],
+          select: { // multi select via checkboxes toggles class on first column
+            style: 'multi',
+            selector: 'td:first-child'
+          },
+          order: [[ 1, 'asc' ]], // default order is second column now
+          columns: [{/* checkbox */}].concat(this.getTableColumns()),
+          serverSide: true,
+          ajax: this.tableAjaxAdapter.bind(this),
           data: this.initialResponse.devices,
           deferLoading: [this.initialResponse.meta.total_entries, this.initialResponse.meta.total_entries],
           buttons: [{extend: "edit", editor: this.editor}]
