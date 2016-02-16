@@ -41,6 +41,8 @@ this.DeviceEditor = (function(){
       prevMeta = _.extend({current_page: 0, page_count: 1}, prevMeta);
       var page = prevMeta.current_page + 1;
       if (page > prevMeta.page_count) {
+        this.users = _.reject(this.users, function(elt){ return elt.label === "System Admin"});
+        this.users = _.sortBy(this.users, "label");
         return;
       }
       console.log("API load users page=" + page);
@@ -48,13 +50,13 @@ this.DeviceEditor = (function(){
       return (new SW.Card()).services("people")
         .request("people", {page: page, per_page: 5})
         .then(function(response){
-          // create "hash" of {"First Last": id}
-          var users = _.inject(response.people, function(hash, person) {
-            hash[person.first_name.concat(" ", person.last_name)] = person.id;
-            return hash;
-          }, {});
+          // create array of {label: "first last", value: id}
+          var users = _.collect(response.people, function(person) {
+            var fullName = person.first_name.concat(" ", person.last_name);
+            return {label: fullName, value: person.id};
+          });
           // merge with existing
-          that.users = _.extend({}, that.users, users);
+          that.users = (that.users || []).concat(users);
           return response.meta;
         })
         .then(this.loadAllUsers.bind(this));
