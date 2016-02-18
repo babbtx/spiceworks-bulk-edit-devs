@@ -89,6 +89,5 @@ configure :build do
 end
 
 activate :deploy do |deploy|
-  deploy.deploy_method = :git
-  deploy.build_before = true
+  deploy.method = :git
 end
