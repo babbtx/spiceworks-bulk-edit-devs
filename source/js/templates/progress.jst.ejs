@@ -1,0 +1,17 @@
+<div class="modal" id="progress-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <% if (message) { %>
+          <div class="progress-message"><%- message %></div>
+        <% } %>
+        <div class="progress">
+          <div class="progress-bar progress-bar-striped active" role="progressbar"
+               aria-valuemin="0" aria-valuemax="100"
+               aria-valuenow="<%- percentage %>" style="width: <%- percentage %> %">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

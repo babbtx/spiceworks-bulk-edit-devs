@@ -10,5 +10,8 @@
  *
  *= require vendor/dataTables.editor
  *= require vendor/editor.bootstrap
+ *=
+ *= require_tree ./templates
+ *= require progress
  *= require device-editor
  */
