@@ -16,6 +16,7 @@ this.DeviceEditor = (function(){
     this.editorOptions = undefined;
     this.tableOptions = undefined;
     this.editor = undefined;
+    this.progress = undefined;
 
     this.adminDefinedColumns = undefined;
     this.standardColumns = [
@@ -37,6 +38,7 @@ this.DeviceEditor = (function(){
 
     this.users = undefined;
     this.loadAllUsers = function(prevMeta) {
+      var that = this;
       // prevMeta is undefined on the first call
       prevMeta = _.extend({current_page: 0, page_count: 1}, prevMeta);
       var page = prevMeta.current_page + 1;
@@ -45,18 +47,24 @@ this.DeviceEditor = (function(){
         this.users = _.sortBy(this.users, "label");
         return;
       }
+      this.progress.advance(page);
       console.log("API load users page=" + page);
-      var that = this;
       return (new SW.Card()).services("people")
-        .request("people", {page: page, per_page: 5})
+        .request("people", {page: page, per_page: 10})
         .then(function(response){
           // create array of {label: "first last", value: id}
           var users = _.collect(response.people, function(person) {
             var fullName = person.first_name.concat(" ", person.last_name);
             return {label: fullName, value: person.id};
           });
-          // merge with existing
-          that.users = (that.users || []).concat(users);
+          if (that.users) {
+            // merge with existing
+            that.users = that.users.concat(users);
+          }
+          else {
+            that.users = users;
+            that.progress.reset({max: response.meta.page_count + 2, message: "Loading users"});
+          }
           return response.meta;
         })
         .then(this.loadAllUsers.bind(this));
@@ -65,6 +73,7 @@ this.DeviceEditor = (function(){
     this.initialResponse = undefined;
     this.loadDeviceMeta = function() {
       var that = this;
+      this.progress.advance();
       return this.service
         .request("devices", {sort: [{name: "asc"}], per_page: this.defaultTableOptions.pageLength})
         .then(function(response){
@@ -302,13 +311,16 @@ this.DeviceEditor = (function(){
     };
 
     this.load = function(selector, editorOptions, tableOptions) {
-      var that = this;
+      this.progress = new Progress({message: "Loading users"});
       return this.loadAllUsers.call(this)
+        .then(this.progress.say.bind(this.progress, "Loading devices"))
         .then(this.loadDeviceMeta.bind(this))
         .then(this.configureEditor.bind(this, selector, editorOptions))
         .then(this.createEditor.bind(this))
         .then(this.configureTable.bind(this, tableOptions))
-        .then(this.createTable.bind(this, selector));
+        .then(this.createTable.bind(this, selector))
+        .then(this.progress.complete.bind(this.progress))
+        .then(null, console.error.bind(console));
     }
   };
 
