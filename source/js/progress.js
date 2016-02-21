@@ -7,7 +7,7 @@ this.Progress = (function() {
 
   var defaults = {
     message: "",
-    indeterminate: true,
+    indeterminate: false,
     max: 100,
   };
 
@@ -30,13 +30,10 @@ this.Progress = (function() {
 
     if (singleton) {
       remove.call(singleton);
-      singleton = this;
-    }
-    else {
-      init.call(this);
-      singleton = this;
     }
 
+    init.call(this);
+    singleton = this;
     this.$el.modal("show");
 
     function updateMessage() {
@@ -71,9 +68,14 @@ this.Progress = (function() {
     };
 
     this.complete = function() {
+      this.completed = true;
       this.advance(this.options.max);
       this.$el.modal("hide");
     };
+
+    this.isComplete = function() {
+      return this.completed;
+    }
   };
 
   return Progress;

@@ -73,13 +73,14 @@ this.DeviceEditor = (function(){
     this.initialResponse = undefined;
     this.loadDeviceMeta = function() {
       var that = this;
-      this.progress.advance();
+      this.progress.advance(); // already exists because of user load
       return this.service
         .request("devices", {sort: [{name: "asc"}], per_page: this.defaultTableOptions.pageLength})
         .then(function(response){
           that.initialResponse = response;
           that.adminDefinedColumns = response.meta.admin_defined_attrs || [];
-        });
+        })
+        .then(that.progress.complete.bind(that.progress),that.progress.complete.bind(that.progress));
     };
 
     this.errorResponseToString = function errorResponseToString(error) {
@@ -111,6 +112,9 @@ this.DeviceEditor = (function(){
         return;
       }
       var that = this;
+      var count = _.size(data.data);
+      var message = (count > 1) ? "Updating devices" : "Updating device";
+      this.progress = new Progress({max: count + 1, message: message});
       var requests = _.collect(data.data, function(updates, id) {
         var d = $.Deferred();
         console.log("API updates for device " + id + ": " + JSON.stringify(updates));
@@ -118,6 +122,7 @@ this.DeviceEditor = (function(){
           .request("device:update", parseInt(id, 10), updates)
           .then(
             function(response){
+              that.progress.advance();
               d.resolve(response);
             },
             function(response){
@@ -129,10 +134,12 @@ this.DeviceEditor = (function(){
       });
       $.when.apply($, requests).then(
         function(args) {
+          // that.progress.complete() is handled in ajax adapter on table page reload
           var devices = _.toArray(arguments);
           callback({data: devices});
         },
         function(args) {
+          that.progress.complete(); // error display handled by editor component
           var errors = _.collect(_.toArray(arguments), that.errorResponseToString).join(", ");
           callback({error: errors});
         }
@@ -248,6 +255,14 @@ this.DeviceEditor = (function(){
     this.tableAjaxAdapter = function(data, callback, settings) {
       var that = this;
       var page = 1 + data.start / this.tableOptions.pageLength;
+      if (this.progress && !this.progress.isComplete()) {
+        // ajax table page reload after update
+        this.progress.say("Loading devices");
+        this.progress.advance();
+      }
+      else {
+        this.progress = new Progress({indeterminate: true, message: "Loading devices"});
+      }
       var requestOptions = {sort: [{name: "asc"}], page: page, per_page: data.length};
       if (data.order && data.order[0]) {
         var sortName = this.tableOptions.columns[data.order[0].column].name;
@@ -275,7 +290,8 @@ this.DeviceEditor = (function(){
             console.warn("API devices fetch error: ", error);
             callback({draw: data.draw, error: error});
           }
-        );
+        )
+        .then(that.progress.complete.bind(that.progress),that.progress.complete.bind(that.progress));
     };
 
     this.configureTable = function() {
