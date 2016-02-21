@@ -1,11 +1,11 @@
-<table id="editor_table" style="width:100%" class="table table-hover table-bordered hover nowrap">
+<table id="editor-table" style="width:100%" class="table table-hover table-bordered hover nowrap">
   <thead></thead>
 </table>
 
 <% content_for(:scripts) do %>
   <script type="text/javascript">
     $(document).ready(function(){
-      (new DeviceEditor()).load("#editor_table");
+      (new DeviceEditor("#editor-table")).load();
     });
   </script>
 <% end %>

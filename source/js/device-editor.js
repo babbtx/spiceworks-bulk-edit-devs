@@ -1,7 +1,7 @@
 this.DeviceEditor = (function(){
   'use strict';
 
-  var DeviceEditor = function DeviceEditor() {
+  var DeviceEditor = function DeviceEditor(selector, editorOptions, tableOptions) {
 
     this.service = (new SW.Card()).services("inventory");
 
@@ -11,7 +11,7 @@ this.DeviceEditor = (function(){
       "<'row'<'col-sm-12'rt>>" +
       "<'row'<'editor-paging col-sm-12'p>>" ;
 
-    this.defaultEditorOptions = {idSrc: "id", formOptions: {main: {submit: "changed", drawType: "full-hold", title: "Edit Device(s)"}}};
+    this.defaultEditorOptions = {table: selector, idSrc: "id", formOptions: {main: {submit: "changed", drawType: "full-hold", title: "Edit Device(s)"}}};
     this.defaultTableOptions = {pageLength: 15, search: {caseInsensitive: true, regex: false}, searchDelay: 500, select: true, dom: editorLayout};
     this.editorOptions = undefined;
     this.tableOptions = undefined;
@@ -184,17 +184,16 @@ this.DeviceEditor = (function(){
       return fields;
     };
 
-    this.configureEditor = function(selector, editorOptions) {
+    this.configureEditor = function() {
       this.editorOptions = _.extend({},
         this.defaultEditorOptions,
-        {table: selector, fields: this.getEditorFields()},
         editorOptions,
-        {ajax: this.editorAjaxAdapter.bind(this)});
+        {fields: this.getEditorFields(), ajax: this.editorAjaxAdapter.bind(this)});
       return this.editorOptions;
     };
 
-    this.createEditor = function(editorOptions) {
-      this.editor = new $.fn.dataTable.Editor(editorOptions);
+    this.createEditor = function(combinedEditorOptions) {
+      this.editor = new $.fn.dataTable.Editor(combinedEditorOptions);
     };
 
     this.standardAttributeTableRenderer = function(columnConfig, data, requestType, row, meta) {
@@ -279,7 +278,7 @@ this.DeviceEditor = (function(){
         );
     };
 
-    this.configureTable = function(tableOptions) {
+    this.configureTable = function() {
       this.tableOptions = _.extend({},
         this.defaultTableOptions,
         tableOptions,
@@ -306,19 +305,19 @@ this.DeviceEditor = (function(){
       return this.tableOptions;
     };
 
-    this.createTable = function(selector, tableOptions) {
-      $(selector).DataTable(tableOptions);
+    this.createTable = function(combinedTableOptions) {
+      $(selector).DataTable(combinedTableOptions);
     };
 
-    this.load = function(selector, editorOptions, tableOptions) {
+    this.load = function() {
       this.progress = new Progress({message: "Loading users"});
       return this.loadAllUsers.call(this)
         .then(this.progress.say.bind(this.progress, "Loading devices"))
         .then(this.loadDeviceMeta.bind(this))
-        .then(this.configureEditor.bind(this, selector, editorOptions))
+        .then(this.configureEditor.bind(this))
         .then(this.createEditor.bind(this))
-        .then(this.configureTable.bind(this, tableOptions))
-        .then(this.createTable.bind(this, selector))
+        .then(this.configureTable.bind(this))
+        .then(this.createTable.bind(this))
         .then(this.progress.complete.bind(this.progress))
         .then(null, console.error.bind(console));
     }
