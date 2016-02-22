@@ -73,16 +73,32 @@ this.DeviceEditor = (function(){
     this.initialResponse = undefined;
     this.loadDeviceMeta = function() {
       var that = this;
-      this.progress.advance(); // already exists because of user load
+      // progress bar already exists because of user load
+      this.progress.say("Loading devices");
+      this.progress.advance(); 
       return this.service
         .request("devices", {sort: [{name: "asc"}], per_page: this.defaultTableOptions.pageLength})
         .then(function(response){
           that.initialResponse = response;
           that.adminDefinedColumns = response.meta.admin_defined_attrs || [];
         })
-        .then(that.progress.complete.bind(that.progress),that.progress.complete.bind(that.progress));
     };
 
+    this.version = undefined;
+    this.sorting = true;
+    this.loadVersion = function() {
+      var that = this;
+      // progress bar already exists because of user and initial device load
+      this.progress.say("Initializing");
+      this.progress.advance();
+      return (new SW.Card()).services("environment")
+        .request("environment")
+        .then(function(response){
+          that.version = response.app_host.version;
+          that.sorting = that.version >= "7.5.00065";
+        });
+    };
+    
     this.errorResponseToString = function errorResponseToString(error) {
       if (_.isArray(error)) {
         return _.collect(error, errorResponseToString).join(", ");
@@ -237,6 +253,10 @@ this.DeviceEditor = (function(){
       var column = _.pick(columnConfig, "name", "visible", "orderable", "searchable");
       _.extend(column, {title: columnConfig.label, type: type, data: null, render: renderer});
       _.defaults(column, {orderable: false, searchable: false, visible: false});
+      // sorting wasn't added until 7.5 patch Feb
+      if (!this.sorting) {
+        column.orderable = false;
+      }
       return column;
     };
 
@@ -320,7 +340,7 @@ this.DeviceEditor = (function(){
             style: 'multi',
             selector: 'td:first-child'
           },
-          order: [[ 1, 'asc' ]], // default order is second column now
+          order: this.sorting ? [[ 1, 'asc' ]] : [], // default order is second column now
           columns: [{/* checkbox */}].concat(this.getTableColumns()),
           serverSide: true,
           ajax: this.tableAjaxAdapter.bind(this),
@@ -346,15 +366,15 @@ this.DeviceEditor = (function(){
     this.load = function() {
       this.progress = new Progress({message: "Loading users"});
       return this.loadAllUsers.call(this)
-        .then(this.progress.say.bind(this.progress, "Loading devices"))
         .then(this.loadDeviceMeta.bind(this))
+        .then(this.loadVersion.bind(this))
         .then(this.configureEditor.bind(this))
         .then(this.createEditor.bind(this))
         .then(this.configureTable.bind(this))
         .then(this.createTable.bind(this))
         .then(this.addMasks.bind(this))
-        .then(this.progress.complete.bind(this.progress))
-        .then(null, console.error.bind(console));
+        .then(null, console.error.bind(console))
+        .then(this.progress.complete.bind(this.progress),this.progress.complete.bind(this.progress));
     }
   };
 
