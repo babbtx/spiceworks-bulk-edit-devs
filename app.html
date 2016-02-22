@@ -12,7 +12,7 @@
         <meta name="description" content="Bulk editor for assets and devices in Spiceworks Inventory">
         <meta name="viewport" content="width=device-width">
 
-        <link href="css/main-2f4d2ece.css" rel="stylesheet" />
+        <link href="css/main-0295e814.css" rel="stylesheet" />
         <script src="js/vendor/modernizr-2.6.1.min-68fdcc99.js"></script>
     </head>
     <body>
@@ -20,17 +20,17 @@
             <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
         <![endif]-->
 
-        <table id="editor_table" style="width:100%" class="table table-hover table-bordered hover nowrap">
+        <table id="editor-table" style="width:100%" class="table table-hover table-bordered hover nowrap">
   <thead></thead>
 </table>
 
 
 
         <script src="https://spiceworks.github.io/spiceworks-js-sdk/dist/spiceworks-sdk.js"></script>
-        <script src="js/main-2b0a1d33.js"></script>
+        <script src="js/main-c9615ea7.js"></script>
           <script type="text/javascript">
     $(document).ready(function(){
-      (new DeviceEditor()).load("#editor_table");
+      (new DeviceEditor("#editor-table")).load();
     });
   </script>
 
