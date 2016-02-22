@@ -86,6 +86,7 @@ this.DeviceEditor = (function(){
 
     this.version = undefined;
     this.sorting = true;
+    this.customAttrs = true;
     this.loadVersion = function() {
       var that = this;
       // progress bar already exists because of user and initial device load
@@ -96,6 +97,7 @@ this.DeviceEditor = (function(){
         .then(function(response){
           that.version = response.app_host.version;
           that.sorting = that.version >= "7.5.00065";
+          that.customAttrs = that.version >= "7.5.00061";
         });
     };
     
@@ -363,6 +365,45 @@ this.DeviceEditor = (function(){
       $(".table-paging .dataTables_paginate").addClass("maskable");
     };
 
+    function getSessionValue(key) {
+      try {
+        return window.sessionStorage.getItem(key);
+      }
+      catch (ignored) {
+        return null;
+      }
+    };
+
+    function setSessionValue(key, value) {
+      try {
+        window.sessionStorage.setItem(key, value);
+        return window.sessionStorage.getItem(key);
+      }
+      catch (ignored) {
+        return null;
+      }
+    };
+
+    this.displayUpgrade = function() {
+      var that = this;
+      var key = "dismissed-spiceworks-upgrade";
+      if (getSessionValue(key)) {
+        return;
+      }
+      if (!(this.sorting && this.customAttrs)) {
+        var features = [];
+        if (!this.sorting) { features.unshift("sorting by columns"); }
+        if (!this.customAttrs) { features.unshift("editing of custom attributes"); }
+        features = features.join(" and ");
+        $(selector + "_wrapper").prepend(JST["templates/upgrade"]({features: features}));
+        $("#upgrade-spiceworks-message").on("closed.bs.alert", function() {
+          // save the version so we can eventually do smarter things
+          // if more features are added to spiceworks and this app
+          setSessionValue(key, that.version);
+        });
+      }
+    };
+
     this.load = function() {
       this.progress = new Progress({message: "Loading users"});
       return this.loadAllUsers.call(this)
@@ -373,6 +414,7 @@ this.DeviceEditor = (function(){
         .then(this.configureTable.bind(this))
         .then(this.createTable.bind(this))
         .then(this.addMasks.bind(this))
+        .then(this.displayUpgrade.bind(this))
         .then(null, console.error.bind(console))
         .then(this.progress.complete.bind(this.progress),this.progress.complete.bind(this.progress));
     }
