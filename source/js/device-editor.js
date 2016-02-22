@@ -7,9 +7,9 @@ this.DeviceEditor = (function(){
 
     // modified from https://datatables.net/reference/option/dom
     var editorLayout =
-      "<'row'<'editor-search col-sm-6'fi><'editor-actions col-sm-6'B>>" +
-      "<'row'<'col-sm-12'rt>>" +
-      "<'row'<'editor-paging col-sm-12'p>>" ;
+      "<'row'<'table-info-left col-sm-6'fi><'table-info-right col-sm-6'B>>" +
+      "<'row'<'table-container col-sm-12't>>" +
+      "<'row'<'table-paging col-sm-12'p>>" ;
 
     this.defaultEditorOptions = {table: selector, idSrc: "id", formOptions: {main: {submit: "changed", drawType: "full-hold", title: "Edit Device(s)"}}};
     this.defaultTableOptions = {pageLength: 15, search: {caseInsensitive: true, regex: false}, searchDelay: 500, select: true, dom: editorLayout};
@@ -255,14 +255,25 @@ this.DeviceEditor = (function(){
     this.tableAjaxAdapter = function(data, callback, settings) {
       var that = this;
       var page = 1 + data.start / this.tableOptions.pageLength;
-      if (this.progress && !this.progress.isComplete()) {
-        // ajax table page reload after update
-        this.progress.say("Loading devices");
-        this.progress.advance();
-      }
-      else {
-        this.progress = new Progress({indeterminate: true, message: "Loading devices"});
-      }
+      var startProgress = function() {
+        if (that.progress && !that.progress.isComplete()) {
+          // ajax table page reload after update
+          that.progress.say("Loading devices");
+          that.progress.advance();
+        }
+        else {
+          $(selector + "_wrapper .maskable").addClass("masked");
+        }
+      };
+      var endProgress = function() {
+        if (that.progress && !that.progress.isComplete()) {
+          that.progress.complete();
+        }
+        else {
+          $(selector + "_wrapper .maskable").removeClass("masked");
+        }
+      };
+      startProgress();
       var requestOptions = {sort: [{name: "asc"}], page: page, per_page: data.length};
       if (data.order && data.order[0]) {
         var sortName = this.tableOptions.columns[data.order[0].column].name;
@@ -291,7 +302,7 @@ this.DeviceEditor = (function(){
             callback({draw: data.draw, error: error});
           }
         )
-        .then(that.progress.complete.bind(that.progress),that.progress.complete.bind(that.progress));
+        .then(endProgress, endProgress);
     };
 
     this.configureTable = function() {
@@ -325,6 +336,13 @@ this.DeviceEditor = (function(){
       $(selector).DataTable(combinedTableOptions);
     };
 
+    this.addMasks = function() {
+      $(".table-info-left .dataTables_info").addClass("maskable");
+      $(".table-info-right .btn-group").addClass("maskable");
+      $(".table-container").addClass("maskable");
+      $(".table-paging .dataTables_paginate").addClass("maskable");
+    };
+
     this.load = function() {
       this.progress = new Progress({message: "Loading users"});
       return this.loadAllUsers.call(this)
@@ -334,6 +352,7 @@ this.DeviceEditor = (function(){
         .then(this.createEditor.bind(this))
         .then(this.configureTable.bind(this))
         .then(this.createTable.bind(this))
+        .then(this.addMasks.bind(this))
         .then(this.progress.complete.bind(this.progress))
         .then(null, console.error.bind(console));
     }
