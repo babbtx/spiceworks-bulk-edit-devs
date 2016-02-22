@@ -5,7 +5,9 @@
 <% content_for(:scripts) do %>
   <script type="text/javascript">
     $(document).ready(function(){
-      (new DeviceEditor("#editor-table")).load();
+      var editor = new DeviceEditor("#editor-table");
+      var welcome = new Welcome();
+      editor.load().then(welcome.show.bind(welcome));
     });
   </script>
 <% end %>

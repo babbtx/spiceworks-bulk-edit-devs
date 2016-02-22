@@ -13,6 +13,7 @@
  *= require vendor/editor.bootstrap
  *=
  *= require_tree ./templates
+ *= require welcome
  *= require progress
  *= require device-editor
  */
