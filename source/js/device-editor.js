@@ -88,6 +88,7 @@ this.DeviceEditor = (function(){
     this.version = undefined;
     this.sorting = true;
     this.customAttrs = true;
+    this.purchaseAttrs = true;
     this.loadVersion = function() {
       var that = this;
       // progress bar already exists because of user and initial device load
@@ -99,6 +100,7 @@ this.DeviceEditor = (function(){
           that.version = response.app_host.version;
           that.sorting = that.version >= "7.5.00065";
           that.customAttrs = that.version >= "7.5.00061";
+          that.purchaseAttrs = that.version >= "7.5.00061";
         });
     };
     
@@ -183,6 +185,10 @@ this.DeviceEditor = (function(){
       }
       var field = _.pick(columnConfig, "name", "label");
       _.extend(field, {type: type, data: accessor, options: options});
+      // purchase price and date not added until 7.5 patch Feb
+      if (!this.purchaseAttrs && (field.name === "purchase_price" || field.name === "purchase_date")) {
+        return null;
+      }
       return field;
     };
 
@@ -207,7 +213,7 @@ this.DeviceEditor = (function(){
       _.each(this.adminDefinedColumns, function(columnConfig) {
         fields.push(that.getEditorField(columnConfig, that.customAttributeEditorAccessor.bind(that, columnConfig)));
       });
-      return fields;
+      return _.compact(fields);
     };
 
     this.configureEditor = function() {
@@ -287,6 +293,10 @@ this.DeviceEditor = (function(){
       var column = _.pick(columnConfig, "name", "visible", "orderable", "searchable");
       _.extend(column, {title: columnConfig.label, type: type, data: null, render: renderer});
       _.defaults(column, {orderable: false, searchable: false, visible: false});
+      // purchase price and date not added until 7.5 patch Feb
+      if (!this.purchaseAttrs && (column.name === "purchase_price" || column.name === "purchase_date")) {
+        return null;
+      }
       // sorting wasn't added until 7.5 patch Feb
       if (!this.sorting) {
         column.orderable = false;
@@ -303,7 +313,7 @@ this.DeviceEditor = (function(){
       _.each(this.adminDefinedColumns, function(columnConfig) {
         columns.push(that.getTableColumn(columnConfig, that.customAttributeTableRenderer.bind(that, columnConfig)));
       });
-      return columns;
+      return _.compact(columns);
     }
 
     this.tableAjaxAdapter = function(data, callback, settings) {
@@ -423,11 +433,16 @@ this.DeviceEditor = (function(){
       if (getSessionValue(key)) {
         return;
       }
-      if (!(this.sorting && this.customAttrs)) {
+      var upToDate = true;
+      upToDate = upToDate && this.sorting;
+      upToDate = upToDate && this.customAttrs;
+      upToDate = upToDate && this.purchaseAttrs;
+      if (!upToDate) {
         var features = [];
-        if (!this.sorting) { features.unshift("sorting by columns"); }
-        if (!this.customAttrs) { features.unshift("editing of custom attributes"); }
-        features = features.join(" and ");
+        if (!this.sorting) { features.push("sorting by columns"); }
+        if (!this.customAttrs) { features.push("editing of custom attributes"); }
+        if (!this.purchaseAttrs) { features.push("editing purchase price and date"); }
+        features = features.join(", ").replace(/,\s([^,]+)$/, ' and $1'); // to_sentence
         $(selector + "_wrapper").prepend(JST["templates/upgrade"]({features: features}));
         $("#upgrade-spiceworks-message").on("closed.bs.alert", function() {
           // save the version so we can eventually do smarter things
