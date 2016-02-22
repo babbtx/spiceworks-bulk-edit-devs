@@ -12,7 +12,7 @@ this.DeviceEditor = (function(){
       "<'row'<'table-paging col-sm-12'p>>" ;
 
     this.defaultEditorOptions = {table: selector, idSrc: "id", formOptions: {main: {submit: "changed", drawType: "full-hold"}}, i18n: {edit: {title: "<h4>Edit Device(s)</h4>"}, multi: {title: "<strong>Multiple values</strong>", info: '"Multiple values" is shown when the devices do not share a common value for the attribute. Click to change all devices at once.'}}};
-    this.defaultTableOptions = {pageLength: 15, search: {caseInsensitive: true, regex: false}, searchDelay: 500, select: true, dom: editorLayout};
+    this.defaultTableOptions = {pageLength: 15, search: {caseInsensitive: true, regex: false}, searchDelay: 500, select: true, dom: editorLayout, language: {search: "Search Devices"}};
     this.editorOptions = undefined;
     this.editor = undefined;
     this.tableOptions = undefined;
