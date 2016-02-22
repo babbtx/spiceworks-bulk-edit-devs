@@ -138,6 +138,11 @@ this.DeviceEditor = (function(){
       this.progress = new Progress({max: count + 1, message: message});
       var requests = _.collect(data.data, function(updates, id) {
         var d = $.Deferred();
+        // hack to get around Spiceworks bug where purchase_price and purchase_date are not updated in an obvious way
+        if (!_.isUndefined(updates.purchase_price)) { updates.c_purchase_price = updates.purchase_price; }
+        if (!_.isUndefined(updates.purchase_date)) { updates.c_purchase_date = updates.purchase_date; }
+        updates = _.omit(updates, "purchase_price", "purchase_date");
+        // end of hack
         console.log("API updates for device " + id + ": " + JSON.stringify(updates));
         that.service
           .request("device:update", parseInt(id, 10), updates)
@@ -272,6 +277,15 @@ this.DeviceEditor = (function(){
         }
         else if (data["primary_owner_name"]) {
           value = data["primary_owner_name"];
+        }
+      }
+      else if (columnConfig.type === "date" && value.match(/\dT\d/)) {
+        try {
+          var m = moment(value);
+          value = m.format("YYYY-MM-DD");
+        }
+        catch (ignored) {
+          // value stays as-is
         }
       }
       return value;
