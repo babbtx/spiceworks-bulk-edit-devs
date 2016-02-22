@@ -14,8 +14,9 @@ this.DeviceEditor = (function(){
     this.defaultEditorOptions = {table: selector, idSrc: "id", formOptions: {main: {submit: "changed", drawType: "full-hold", title: "Edit Device(s)"}}};
     this.defaultTableOptions = {pageLength: 15, search: {caseInsensitive: true, regex: false}, searchDelay: 500, select: true, dom: editorLayout};
     this.editorOptions = undefined;
-    this.tableOptions = undefined;
     this.editor = undefined;
+    this.tableOptions = undefined;
+    this.table = undefined;
     this.progress = undefined;
 
     this.adminDefinedColumns = undefined;
@@ -217,8 +218,39 @@ this.DeviceEditor = (function(){
       return this.editorOptions;
     };
 
+    this.onInitEditor = function() {
+      var that = this;
+      var editCount = this.table.rows({selected: true}).count();
+      if (editCount > 1) {
+        // hide attributes that are unique
+        // one should not be able to update these to the same value
+        _.each(["name", "ip_address", "mac_address", "serial_number", "asset_tag"], function (attr) {
+          that.editor.hide(attr);
+        });
+      }
+      else {
+        // show everything
+        that.editor.show();
+      }
+    };
+
+    this.onEditorOpen = function(evt, mode, action) {
+      if (action === "edit" || this.table.rows({selected: true}).count() > 1) {
+        // find the first field with multiple values that is not hidden
+        // and show its "multiple values" help text. we have to do this
+        // because we are using the API above to hide unique fields,
+        // but this is also hiding what is most likely first "multi" field.
+        $(".DTE_Form_Content .DTE_Field:not([style*=none]) .multi-value[style*=block]")
+          .first()
+          .find("[data-dte-e='multi-info']")
+          .css("display", "block");
+      }
+    };
+
     this.createEditor = function(combinedEditorOptions) {
       this.editor = new $.fn.dataTable.Editor(combinedEditorOptions);
+      this.editor.on("initEdit", this.onInitEditor.bind(this));
+      this.editor.on("open", this.onEditorOpen.bind(this));
     };
 
     this.standardAttributeTableRenderer = function(columnConfig, data, requestType, row, meta) {
@@ -356,6 +388,7 @@ this.DeviceEditor = (function(){
 
     this.createTable = function(combinedTableOptions) {
       $(selector).DataTable(combinedTableOptions);
+      this.table = $(selector).DataTable();
     };
 
     this.addMasks = function() {
