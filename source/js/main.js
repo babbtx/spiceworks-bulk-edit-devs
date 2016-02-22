@@ -2,6 +2,7 @@
  *= require jquery
  *= require underscore
  *= require bootstrap
+ *= require bootstrap-multiselect
  *= require moment
  *= require datatables.net/js/jquery.dataTables
  *= require datatables.net-bs/js/dataTables.bootstrap

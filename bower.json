@@ -28,6 +28,7 @@
     "datatables.net-bs": "~1.10.10",
     "datatables.net-buttons-bs": "~1.1.0",
     "datatables.net-select-bs": "~1.1.0",
-    "moment": "~2.11.2"
+    "moment": "~2.11.2",
+    "bootstrap-multiselect": "^0.9.13"
   }
 }

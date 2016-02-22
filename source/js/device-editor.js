@@ -16,6 +16,7 @@ this.DeviceEditor = (function(){
     this.editorOptions = undefined;
     this.editor = undefined;
     this.tableOptions = undefined;
+    this.tableColumns = undefined;
     this.table = undefined;
     this.progress = undefined;
 
@@ -327,7 +328,8 @@ this.DeviceEditor = (function(){
       _.each(this.adminDefinedColumns, function(columnConfig) {
         columns.push(that.getTableColumn(columnConfig, that.customAttributeTableRenderer.bind(that, columnConfig)));
       });
-      return _.compact(columns);
+      this.tableColumns = _.compact(columns);
+      return this.tableColumns;
     }
 
     this.tableAjaxAdapter = function(data, callback, settings) {
@@ -415,6 +417,33 @@ this.DeviceEditor = (function(){
       this.table = $(selector).DataTable();
     };
 
+    this.onColumnChooserChange = function($option, checked) {
+      this.table.column($option.attr("name") + ":name").visible(checked);
+      this.table.columns.adjust();
+    };
+
+    this.addColumnChooser = function() {
+      // build up <div><select><option></option></select></div>
+      var $html = $('<div id="column-selector"><select multiple="multiple"></select></div>');
+      var $selector = $html.find("select");
+      _.each(this.tableColumns, function(column){
+        var $option = $('<option></option>').attr("name", column.name).text(column.title);
+        if (column.visible) {
+          $option.attr("selected", "selected");
+        }
+        $option.appendTo($selector);
+      });
+      $html.appendTo($(".table-info-right"));
+      // convert to bootstrap multiselect
+      $("#column-selector select").multiselect({
+        templates: {
+          button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span> Columns</button>',
+          ul: '<ul class="multiselect-container dropdown-menu dropdown-menu-right"></ul>'
+        },
+        onChange: this.onColumnChooserChange.bind(this)
+      });
+    };
+
     this.addMasks = function() {
       $(".table-info-left .dataTables_info").addClass("maskable");
       $(".table-info-right .btn-group").addClass("maskable");
@@ -475,6 +504,7 @@ this.DeviceEditor = (function(){
         .then(this.createEditor.bind(this))
         .then(this.configureTable.bind(this))
         .then(this.createTable.bind(this))
+        .then(this.addColumnChooser.bind(this))
         .then(this.addMasks.bind(this))
         .then(this.displayUpgrade.bind(this))
         .then(null, console.error.bind(console))
