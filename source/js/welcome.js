@@ -32,6 +32,13 @@ this.Welcome = (function() {
           that.dismissed = true;
           setStorageValue("dismissed-welcome", true);
         });
+        $("#welcome-message a[href]").on("click", function(evt){
+          try {
+            (new SW.Card()).services("environment").trigger("navigate", $(this).attr("href"));
+            evt.preventDefault();
+          }
+          catch (ignored) {}
+        });
       }
     };
   };
