@@ -276,7 +276,9 @@ this.DeviceEditor = (function(){
       }
       else if (columnConfig.name === "owner") {
         if (data["owner"] && data["owner"].id) {
-          value = data["owner"].first_name + " " + data["owner"].last_name;
+          var first = data["owner"].first_name || "";
+          var last = data["owner"].last_name || "";
+          value = (first && last) ? first.concat(" ", last) : "(user #".concat(data["owner"].id, " no name)");
         }
         else if (data["primary_owner_name"]) {
           value = data["primary_owner_name"];
