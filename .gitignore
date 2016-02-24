@@ -28,3 +28,5 @@
 /source/js/vendor/dataTables.editor.js
 /source/js/vendor/editor.bootstrap.js
 
+# other stuff
+.env

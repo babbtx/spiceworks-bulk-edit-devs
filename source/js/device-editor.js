@@ -507,7 +507,7 @@ this.DeviceEditor = (function(){
         .then(this.addColumnChooser.bind(this))
         .then(this.addMasks.bind(this))
         .then(this.displayUpgrade.bind(this))
-        .then(null, console.error.bind(console))
+        .then(null, Rollbar.error.bind(Rollbar))
         .then(this.progress.complete.bind(this.progress),this.progress.complete.bind(this.progress));
     }
   };
