@@ -56,7 +56,9 @@ this.DeviceEditor = (function(){
         .then(function(response){
           // create array of {label: "first last", value: id}
           var users = _.collect(response.people, function(person) {
-            var fullName = person.first_name.concat(" ", person.last_name);
+            var first = person.first_name || "";
+            var last = person.last_name || "";
+            var fullName = (first && last) ? first.concat(" ", last) : "(user #".concat(person.id, " no name)");
             return {label: fullName, value: person.id};
           });
           if (that.users) {
