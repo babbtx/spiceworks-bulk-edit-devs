@@ -191,6 +191,9 @@ this.DeviceEditor = (function(){
       if (columnConfig.name === "owner") {
         options = this.users;
       }
+      else if (type === "select") {
+        options = columnConfig.options;
+      }
       var field = _.pick(columnConfig, "name", "label");
       _.extend(field, {type: type, data: accessor, options: options});
       // purchase price and date not added until 7.5 patch Feb
