@@ -25,8 +25,8 @@
 /.byebug_history
 
 # ignore the (paid) datatables editor
-/source/js/vendor/dataTables.editor.js
-/source/js/vendor/editor.bootstrap.js
+/source/js/vendor/_dataTables.editor.js
+/source/js/vendor/_editor.bootstrap.js
 
 # other stuff
 .env

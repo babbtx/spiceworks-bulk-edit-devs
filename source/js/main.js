@@ -10,11 +10,11 @@
  *= require datatables.net-buttons-bs/js/buttons.bootstrap
  *= require datatables.net-select/js/dataTables.select
  *
- *= require vendor/dataTables.editor
- *= require vendor/editor.bootstrap
+ *= require vendor/_dataTables.editor
+ *= require vendor/_editor.bootstrap
  *=
  *= require_tree ./templates
- *= require welcome
- *= require progress
- *= require device-editor
+ *= require _welcome
+ *= require _progress
+ *= require _device-editor
  */

@@ -41,8 +41,8 @@ which is a paid component. Copy DataTables Editor and its Bootstrap-styling plug
 source directory.
 
 ```bash
-$ cp dataTables.editor.js source/js/vendor/
-$ cp editor.bootstrap.js source/js/vendor/
+$ cp dataTables.editor.js source/js/vendor/_dataTables.editor.js
+$ cp editor.bootstrap.js source/js/vendor/_editor.bootstrap.js
 ```
 
 #### 2. Configure
